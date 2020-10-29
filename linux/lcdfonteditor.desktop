@@ -1,0 +1,10 @@
+[Desktop Entry]
+Comment=Graphic editor of hard-coded fonts for LCD and OLED displays
+Terminal=false
+Name=LCD Font Editor
+Name[cs]=LCD Font Editor
+Exec=lcdfonteditor
+Type=Application
+Icon=fonts
+Categories=Development;Graphics;
+GenericName=Edit hard-coded fonts
