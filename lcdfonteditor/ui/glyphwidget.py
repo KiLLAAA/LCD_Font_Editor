@@ -43,6 +43,7 @@ class GlyphWidget(wx.Panel):
         self.font_bytewidth = bytewidth  # bytes per glyph
         self.pixel_diameter = self.modes[self.selectedMode]["zoom"] # how large is a pixel aka zoom
         self.highlightedPixel = None
+        self.lastLeftDown = None
         # Panel size
         self.width = self.font_bytewidth * self.pixel_diameter
         self.height = 8 * self.pixel_diameter # 8 hardcoded! -> byte len = font height
@@ -56,7 +57,7 @@ class GlyphWidget(wx.Panel):
         self.SetBackgroundColour("#4f5049") # hardcoded colour to match underlying panel
         # Bind events
         self.Bind(wx.EVT_PAINT, self.OnPaint)
-        self.Bind(wx.EVT_LEFT_DOWN, self._onMouseDown)
+        self.Bind(wx.EVT_LEFT_DOWN, self.onMouseDown)
         self.Bind(wx.EVT_LEFT_UP, self.onMouseUp)
         self.Bind(wx.EVT_LEAVE_WINDOW, self._onMouseLeave)
         self.Bind(wx.EVT_ENTER_WINDOW, self._onMouseEnter)
@@ -140,7 +141,7 @@ class GlyphWidget(wx.Panel):
         self.Refresh()
 
     def onMouseMove(self, event):
-        """Event mouse move"""
+        """Event mouse move, returns True if left mouse button is held at same time, otherwise returns nothing, its used to trigger refresh of other widgets in main ui"""
         pt = event.GetPosition()
         xx, yy = pt
         if (xx < 0) or (yy < 0): return # event sometimes gives negative values whose cause another weird bugs
@@ -153,21 +154,25 @@ class GlyphWidget(wx.Panel):
         self.highlightedPixel = (pixel_x, pixel_y)
         self.debug("GlyphWidget", "Event", "MouseMove > pixel", xx, yy, "> cell", self.highlightedPixel)
         if self.highlightedPixel != previousHighlighted:
+            if self.lastLeftDown is not None:
+                lastLeftX, lastLeftY = self.lastLeftDown
+                # set all next pixels same colour as clicked one
+                if (self.data[lastLeftX] & (1<<lastLeftY)):
+                    self.data[pixel_x] = (self.data[pixel_x] | (1<<pixel_y))
+                else: self.data[pixel_x] &= ~(self.data[pixel_x] & (1<<pixel_y))
+
+                self.Refresh()
+                return True
             self.Refresh()
 
-    def _onMouseDown(self, event):
+    def onMouseDown(self, event):
         """Event left mouse down"""
         self.mouseDown = True
-
-    def onMouseUp(self, event):
-        """Event left mouse up"""
         # return if no data to display
         if self.data: pass
         else: return
 
-        self.mouseDown = False
         pt = event.GetPosition()  # position tuple
-        #self.last_LeftUp = pt
         xx, yy = pt
 
         if (xx < 0) or (yy < 0): return # event sometimes gives negative values whose cause another weird bugs
@@ -177,6 +182,7 @@ class GlyphWidget(wx.Panel):
         pixel_x = xx/self.pixel_diameter # cell x
         pixel_y = (yy/self.pixel_diameter) # cell y
 
+        self.lastLeftDown = pixel_x, pixel_y
         self.debug("GlyphWidget", "Event", "MouseUp > pixel",pt, "> cell", pixel_x, pixel_y)
         
         self.data[pixel_x] = (self.data[pixel_x] ^ (1<<pixel_y)) # NEW DATA!
@@ -188,5 +194,9 @@ class GlyphWidget(wx.Panel):
 
         self.Refresh()
 
+    def onMouseUp(self, event):
+        """Event left mouse up"""
+        self.mouseDown = False
+        self.lastLeftDown = None
         #event.Skip()
 ################################################################

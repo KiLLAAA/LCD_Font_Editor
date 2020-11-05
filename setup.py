@@ -65,7 +65,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="lcd-font-editor",
-    version="1.2.1",
+    version="1.2.2",
     author="Lukas Vyhnalek aka KiLLA",
     author_email="killa dot czech at gmail dot com",
     description="Graphic editor of hard-coded fonts for LCD and OLED displays.",

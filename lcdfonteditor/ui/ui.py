@@ -42,7 +42,7 @@ from ui_options import OptionsFrame
 
 ################
 # DEBUG
-DEBUG = True # True / False
+DEBUG = False # True / False
 showInspectionWindow = False # True / False
 if DEBUG and showInspectionWindow: import wx.lib.inspection # import widgets inspection tool
 
@@ -102,6 +102,8 @@ class MainFrame(wx.Frame):
 
         self.glyphWidget = GlyphWidget(self, self.leftPanel, DEFAULT_BYTEWIDTH, glyphWidgetMode)
         self.glyphWidget.Bind(wx.EVT_LEFT_UP, self.onGlyphWidgetMouseUp)
+        self.glyphWidget.Bind(wx.EVT_LEFT_DOWN, self.onGlyphWidgetMouseDown)
+        self.glyphWidget.Bind(wx.EVT_MOTION, self.onGlyphWidgetMouseMove)
 
         ################
         # FONT WIDGET
@@ -380,13 +382,23 @@ class MainFrame(wx.Frame):
 
     ################
     # MOUSE EVENTS
-    def onGlyphWidgetMouseUp(self, event):
-        """onMouseUp-parent"""
-        self.glyphWidget.onMouseUp(event)
+    def onGlyphWidgetMouseDown(self, event):
+        """onMouseDown-parent"""
+        self.glyphWidget.onMouseDown(event)
         self.updateSelectedGlyph()
         self.loadFontWidgetImageData()
         self.fontWidget.Refresh()
-        #event.Skip()
+
+    def onGlyphWidgetMouseUp(self, event):
+        """onMouseUp-parent"""
+        self.glyphWidget.onMouseUp(event)
+
+    def onGlyphWidgetMouseMove(self, event):
+        """onMouseMove-parent"""
+        if self.glyphWidget.onMouseMove(event):
+            self.updateSelectedGlyph()
+            self.loadFontWidgetImageData()
+            self.fontWidget.Refresh()
 
     def onFontWidgetMouseUp(self, event):
         """onFontWidgetMouseUp"""
@@ -399,7 +411,6 @@ class MainFrame(wx.Frame):
 
         self.selectedLabel.GetParent().GetContainingSizer().Layout()
         self.fontWidget.GetContainingSizer().Layout()
-        #event.Skip()
 
     def onFontWidgetMouseMove(self, event):
         """onFontWidgetMouseMove"""
